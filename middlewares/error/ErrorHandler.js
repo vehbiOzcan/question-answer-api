@@ -10,7 +10,7 @@ const customErrorHandler = (err, req, res, next) => {
         customErr = new CustomError("Unexpected Syntax", 400)
     }
     if(err.name === "ValidationError"){
-        customErr = new CustomError("Validation Error", 400)
+        customErr = new CustomError(err.message, 400)
     }
 
     res
