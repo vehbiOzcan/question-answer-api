@@ -1,0 +1,24 @@
+{
+  "name": "question-answer-rest-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js",
+    "run": "node server.js"
+  },
+  "type": "module",
+  "keywords": [
+    "express",
+    "rest",
+    "api"
+  ],
+  "author": "Vehbi Özcan",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+    "mongoose": "^7.2.3"
+  }
+}
