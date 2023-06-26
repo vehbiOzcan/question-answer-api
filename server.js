@@ -7,6 +7,9 @@ import ErrorHandler from './middlewares/error/ErrorHandler.js';
 //app'i başlattık
 const app = express();
 
+//Json middleware ni kullandık
+app.use(express.json())
+
 //Enviroment Variables
 dotenv.config(
     {

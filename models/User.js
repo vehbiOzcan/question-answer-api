@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from 'bcryptjs';
 //Mongoose içerisinden Schema objesini aldık
 const { Schema } = mongoose;
 
@@ -52,6 +53,25 @@ const UserSchema = new Schema({
         default: false
     }
 })
+
+//Mongoose un Pre and Post hook ları sayesinde belirtilen  db işleminden önce ve sonra yapıla-cak/bilecek işlemleri yaparız.
+UserSchema.pre("save", function (next) {
+    //Parola Değişmemişse
+    if(!this.isModified("password")){
+        next();
+    }
+
+    bcrypt.genSalt(10, (err, salt) => {
+        if(err) next(err); //Hata varsa customHandlerımıza gönderdik
+        //hash(gönderdiğimizString, salt, (errorDeğişkeni, hashlenmişHaliniTutanDeğişken) )
+        bcrypt.hash(this.password, salt, (err, hash) => {
+            if(err) next(err); //hata varsa handlerımıza gönderdik
+            this.password = hash; // hashlenmiş parolayı eskisi ile değiştirdik
+            next();
+        });
+    });
+    //console.log(this,"Pre Hooks : Save");
+});
 
 //Mongoose içerisine modelimizi kayıt ettik ve export ettik
 export default mongoose.model("User", UserSchema);
