@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import asyncErrorWrapper from "../helpers/error/asyncErrorWrapper.js";
+import { sendJwtToClient } from "../helpers/auth/sendJwtToClient.js";
 
 const register = asyncErrorWrapper(async (req, res, next) => {
     //Post Data 
@@ -15,13 +16,8 @@ const register = asyncErrorWrapper(async (req, res, next) => {
         password,
         role
     });
-
-    res
-        .status(200)
-        .json({
-            success: true,
-            data: user
-        })
+    
+    sendJwtToClient(user,res);
 
     //async işlemlerdeki hataları yakalamk için try - catch yapısı kullanılır
     //ve catch içerisinde hata return next(err) diyerek errorHandler'a gönderilir
@@ -43,10 +39,9 @@ const register = asyncErrorWrapper(async (req, res, next) => {
     // } catch (err) {
     //     return next(err);
     // }
-
 });
 
-//(Denemk için bir amacı yok) Bu hatayı fırlattığımız zaman custom error handlerımız yakalıyor
+//(Denemek için bir amacı yok) Bu hatayı fırlattığımız zaman custom error handlerımız yakalıyor
 const errorTest = (req, res, next) => {
     //some code
     throw new Error("Bir hata oluştu")

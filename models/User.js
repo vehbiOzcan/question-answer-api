@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
 //Mongoose içerisinden Schema objesini aldık
 const { Schema } = mongoose;
 
@@ -13,7 +15,7 @@ const UserSchema = new Schema({
     email: {
         type: String,
         required: true,
-        unique: [true, "Please different email"],
+        unique: true,
         match: [/^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/, "Please provide a valid email"]
 
     },
@@ -54,18 +56,36 @@ const UserSchema = new Schema({
     }
 })
 
+//UserSchema methods
+
+UserSchema.methods.generateJwtFromUser = function () {
+    //Secret key ve Expıred (jwt geçer süresini env dosyasından aldık)
+    const {JWT_SECRET_KEY, JWT_EXPIRE} = process.env;
+
+    const payload = { //Jwt sahibi hakkındaki bilgiler
+        id: this._id, //kullanıcı id bilgisi
+        name: this.name //kullanıcı isim bilgisi
+    }
+
+    const token = jwt.sign(payload,JWT_SECRET_KEY,{expiresIn:JWT_EXPIRE});
+
+    return token;
+}
+
+
+
 //Mongoose un Pre and Post hook ları sayesinde belirtilen  db işleminden önce ve sonra yapıla-cak/bilecek işlemleri yaparız.
 UserSchema.pre("save", function (next) {
     //Parola Değişmemişse
-    if(!this.isModified("password")){
+    if (!this.isModified("password")) {
         next();
     }
 
     bcrypt.genSalt(10, (err, salt) => {
-        if(err) next(err); //Hata varsa customHandlerımıza gönderdik
+        if (err) next(err); //Hata varsa customHandlerımıza gönderdik
         //hash(gönderdiğimizString, salt, (errorDeğişkeni, hashlenmişHaliniTutanDeğişken) )
         bcrypt.hash(this.password, salt, (err, hash) => {
-            if(err) next(err); //hata varsa handlerımıza gönderdik
+            if (err) next(err); //hata varsa handlerımıza gönderdik
             this.password = hash; // hashlenmiş parolayı eskisi ile değiştirdik
             next();
         });
