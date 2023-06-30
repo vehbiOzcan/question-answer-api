@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken';
-
 export const sendJwtToClient = (user, res) => {
     //Generate Token
     const token = user.generateJwtFromUser();
