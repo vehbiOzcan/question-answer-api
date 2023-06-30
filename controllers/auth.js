@@ -50,35 +50,49 @@ const tokenTest = (req, res, next) => {
     })
 }
 
-const getUser = (req, res, next) => {
+const getUser = asyncErrorWrapper(async (req, res, next) => {
     res.json({
-        success:true,
+        success: true,
         //middleware/uth/auth.js içerisinde yazdığımız getAccessToRoute fonkisyondan req.user üzerine kaydedilen decoded bilgileri
-        data:{
+        data: {
             id: req.user.id,
             name: req.user.name
         }
     });
-}
+})
 
-const login = asyncErrorWrapper(async (req,res,next) => {
+const login = asyncErrorWrapper(async (req, res, next) => {
 
-    const {email, password} = req.body;
+    const { email, password } = req.body;
 
-    if(!validateUserInput(email,password)){ //inputlar girilmişmi diye kontrol ediyoruz 
-        return next(new CustomError("Please check your input",400))
+    if (!validateUserInput(email, password)) { //inputlar girilmişmi diye kontrol ediyoruz 
+        return next(new CustomError("Please check your input", 400))
     }
 
-    const user = await User.findOne({email}).select("+password"); //db den mail e göre kullanıcıyı çekiyoruz 
+    const user = await User.findOne({ email }).select("+password"); //db den mail e göre kullanıcıyı çekiyoruz 
     //console.log(user);
 
-    if(!comparePassword(password,user.password)){ //kullanıcının girdiği password ile dbdeki hashlenmiş password aynı mı diye bakıyoruz 
+    if (!comparePassword(password, user.password)) { //kullanıcının girdiği password ile dbdeki hashlenmiş password aynı mı diye bakıyoruz 
         return next(new CustomError("Please check your credentials", 400));
     }
 
-    sendJwtToClient(user,res); //hashlenmiş password doğru ise token ımızı ve user bilgilerini istemciye gönderiyoruz
+    sendJwtToClient(user, res); //hashlenmiş password doğru ise token ımızı ve user bilgilerini istemciye gönderiyoruz
 
 });
+
+const logout = asyncErrorWrapper(async (req, res, next) => {
+
+    const { NODE_ENV } = process.env;
+
+    return res.status(200).cookie({
+        httpOnly:true,
+        expires:new Date(Date.now), //zamanı şimdi yaptığımız için silindi
+        secure: NODE_ENV === "development" ? false : true
+    }).json({
+        success:true,
+        message:"Logout successfully"
+    })
+})
 
 //(Denemek için bir amacı yok) Bu hatayı fırlattığımız zaman custom error handlerımız yakalıyor
 const errorTest = (req, res, next) => {
@@ -88,6 +102,6 @@ const errorTest = (req, res, next) => {
 }
 
 
-const AuthController = { register, errorTest, tokenTest, getUser, login }
+const AuthController = { register, errorTest, tokenTest, getUser, login, logout }
 
 export default AuthController;
