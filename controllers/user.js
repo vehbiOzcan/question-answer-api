@@ -9,9 +9,10 @@ const getSingleUser = asyncErrorWrapper(async (req,res,next) => {
     //id ye göre User içerisinde ardık
     const user = await User.findById(id);
 
-    if(!user){
-        next(new CustomError("There is no such user with that id", 404));
-    }
+    // if(!user){
+    //     next(new CustomError("There is no such user with that id", 404));
+    // } //bu kısmı checkExistUser middlewareni uyguladığımız için iptal ettik 
+    //eğer istersek hiç sorgu yapmadan direk req.data diyerek midd. kayıt ettiğimiz veriyi de alabilirdik
 
     res.status(200).json({
         success:true,
