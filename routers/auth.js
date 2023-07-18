@@ -2,6 +2,7 @@ import express  from "express";
 //Controllers
 import AuthController from "../controllers/auth.js";
 import { getAccessToRoute } from "../middlewares/auth/auth.js";
+import profileImageUpload from "../middlewares/libraries/profileImageUploads.js";
 
 const auth = express.Router();
 
@@ -15,4 +16,7 @@ auth.get("/profile",getAccessToRoute,AuthController.getUser) //Tokenımız ile u
 auth.post("/login",AuthController.login) 
 auth.get("/logout",getAccessToRoute,AuthController.logout) // Burada da token varmı kontrol etmemiz gerekiyor varsa çıkışı sağlayacağız
 
+auth.post("/forgotpassword",AuthController.forgotPassword); //password unutulma yada yenileme işleminde kullanılacak
+
+auth.post("/upload",[getAccessToRoute,profileImageUpload.single("profile_image")],AuthController.imageUpload) //multer ile oluşturduğumuz profileImageUpload middlewaremızı dahil ettik 
 export default auth;

@@ -3,6 +3,7 @@ import asyncErrorWrapper from "../helpers/error/asyncErrorWrapper.js";
 import { sendJwtToClient } from "../helpers/auth/tokenHelpers.js";
 import { comparePassword, validateUserInput } from "../helpers/input/inputHelpers.js";
 import CustomError from "../helpers/error/CustomError.js";
+import sendmail from "../helpers/libraries/sendMail.js";
 
 const register = asyncErrorWrapper(async (req, res, next) => {
     //Post Data 
@@ -94,6 +95,113 @@ const logout = asyncErrorWrapper(async (req, res, next) => {
     })
 })
 
+const imageUpload = asyncErrorWrapper(async (req, res, next) => {
+    //user id mize (getAccessRoute tan gelen) göre kullanıcımızı bulduk 
+    //ardından profile_image alanını profileImageUploads midd. dan gelen savedProfileImage ile güncelledik 
+    const user = await User.findByIdAndUpdate(req.user.id,{
+        profil_image:req.savedProfileImage
+    },{
+        //yeni kullanıcı bilgilerini dönmesi ve validasyonların aktif kalmasını ayarladık
+        new:true,
+        runValidators:true
+    })
+    
+    res.status(200).json({
+        success: true,
+        message:"Profile image successfull",
+        data: user
+    })
+})
+
+
+//Forgot password
+const forgotPassword = asyncErrorWrapper(async (req,res,next) => {
+    const resetEmail = req.body.email
+    
+    //email ile kullanıcı var mı arıyoruz varsa alıyoruz 
+    const user = await User.findOne({email:resetEmail});
+
+    //user var mı kontrol ettik
+    if(!user){
+        return next(new CustomError("There is no user with that email",400));
+    }
+
+    //resetPasswordToken imizi user üzerine kayıt ettiğimiz metot ile ürettik 
+    const resetPasswordToken = await user.generateResetPasswordToken();
+
+    await user.save();
+    //reset tokenımıızı url mize query parametre olarak  ekleyip resetpassword routuna yönlendirdik
+    const resetPassworUrl = `http://localhost:5000/api/auth/resetpassword?resetPasswordToken=${resetPasswordToken}`;
+    //emailimiz bir html göndereceği için templatenini ve reset urlsine gönderen liniki oluşturduk
+    const emailTemplate = `
+    <h3>Reset Password Link</h3>
+    <p> This <a href='${resetPassworUrl} target = '_blank'>Reset Link</a> active 1 hour. </p>  
+    `; 
+
+    try { 
+        //Oluşturduğumuz mail gönderme helperını import edip mailOption larımızı girdik  
+        await sendmail({
+            from:process.env.SMTP_USER, //kimden?
+            to:resetEmail, //Kime?
+            subject:'Reset Your Email', //Mail başlığı
+            html: emailTemplate //mail mi yoksa html mi html ise templatini girdik
+        });
+        res.status(200).json(
+            {
+                success:true,
+                message:"Reset password send your email"
+            }
+        )
+        
+    } catch (err) {
+        //E- maiil gönderilmediyse ilgili alanları user üzerinden sıfır-lamamız gerekiyor çünkü bu token işe yaramayacak
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        //sıfırlayıp kayıt ediyoruz
+        await user.save();
+
+        return next(new CustomError("Email could not be send",500));
+    }
+
+})
+
+//Reset Password
+const resetPassword = asyncErrorWrapper(async ()=> {
+    //forgot pasword üzerinden mail ile gönderdiğimiz likin yönlendirdiği routa eklediğimiz query parametresini aldık :D 
+    const {resetPasswordToken} = req.query;
+    const {password} = req.body //yeni passwordumuzu aldık
+
+    //token yoksa hata döndük
+    if(!resetPasswordToken){
+        next(new CustomError("Please provide a valid token"), 400)
+    }
+
+    //token varsa kulanıcı içerinde aradık 
+    const user = await User.findOne({
+        resetPasswordToken:resetPasswordToken, //resetPasword tokenı eşit olan kişinin bilgilerini
+        resetPasswordExpire: {$gt : Date.now()} //password tokenının expire süresi şimdiki zamandan büyükse alır
+    })
+    //kullanıcının tokeni yoksa yada expire olmuşsa hata fırlattık
+    if(!user){
+        next(new CustomError("Invalid token or session expired", 404))
+    }
+    //Hiç bir sorun yoksa passwordunu güncelledik ve token kısımlarını sıfırladık
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save(); //kayıt ettik 
+    //responsumuzu döndük
+    res
+    .status(200)
+    .json({
+        success:true,
+        message:"Reset password process successfull"
+    })
+
+}) 
+
 //(Denemek için bir amacı yok) Bu hatayı fırlattığımız zaman custom error handlerımız yakalıyor
 const errorTest = (req, res, next) => {
     //some code
@@ -102,6 +210,7 @@ const errorTest = (req, res, next) => {
 }
 
 
-const AuthController = { register, errorTest, tokenTest, getUser, login, logout }
+
+const AuthController = { register, errorTest, tokenTest, getUser, login, logout, imageUpload, forgotPassword }
 
 export default AuthController;

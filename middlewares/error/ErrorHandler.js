@@ -6,6 +6,10 @@ const customErrorHandler = (err, req, res, next) => {
    let customErr = err;
     console.log(err.name,err.message);
 
+    if(err.name === "CastError"){
+        CustomError = new CustomError("Please Provide a valid id", 400)
+    }
+
     if(err.name === "SyntaxError"){
         customErr = new CustomError("Unexpected Syntax", 400)
     }

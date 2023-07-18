@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto'
 
 //Mongoose içerisinden Schema objesini aldık
 const { Schema } = mongoose;
@@ -53,6 +54,12 @@ const UserSchema = new Schema({
     blocked: {
         type: Boolean,
         default: false
+    },
+    resetPasswordToken: {
+        type: String
+    },
+    resetPasswordExpire: {
+        type: Date
     }
 })
 
@@ -60,18 +67,41 @@ const UserSchema = new Schema({
 
 UserSchema.methods.generateJwtFromUser = function () {
     //Secret key ve Expıred (jwt geçer süresini env dosyasından aldık)
-    const {JWT_SECRET_KEY, JWT_EXPIRE} = process.env;
+    const { JWT_SECRET_KEY, JWT_EXPIRE } = process.env;
 
     const payload = { //Jwt sahibi hakkındaki bilgiler
         id: this._id, //kullanıcı id bilgisi
         name: this.name //kullanıcı isim bilgisi
     }
 
-    const token = jwt.sign(payload,JWT_SECRET_KEY,{expiresIn:JWT_EXPIRE});
+    const token = jwt.sign(payload, JWT_SECRET_KEY, { expiresIn: JWT_EXPIRE });
 
     return token;
 }
 
+UserSchema.methods.generateResetPasswordToken = function () {
+    
+    const {RESET_PASSWORD_EXPIRE} = process.env;
+    //crypto kütüphanesi içerisinden randomBytesfonksiyonu ile rastgele 15 byte üretip bytlerı hex formatında stringe çevirdik
+    const randomHexString = crypto.randomBytes(15).toString("hex");
+    //console.log(randomHexString);
+    
+    //ürettiğimiz randomHexStringimizi createHash metodu ile istediğimiz algoritmaya göre update metodunu 
+    //kullanarak hashledik  ve digest ile yine hex olarak ayarladık 
+    const resetPasswordToken = crypto
+        .createHash("SHA256")
+        .update(randomHexString)
+        .digest("hex")
+    
+    //Modelimiz üzerindeki resetpasswordtoken ve expire kısımlarını o anki kullanıcıya göre güncelledik
+    this.resetPasswordToken = resetPasswordToken;    
+    this.resetPasswordExpire = Date.now() + parseInt(RESET_PASSWORD_EXPIRE);
+
+    //console.log(resetPasswordToken);    
+    
+    return resetPasswordToken;
+
+}
 
 
 //Mongoose un Pre and Post hook ları sayesinde belirtilen  db işleminden önce ve sonra yapıla-cak/bilecek işlemleri yaparız.
