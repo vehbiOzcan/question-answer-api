@@ -20,6 +20,16 @@ const getSingleUser = asyncErrorWrapper(async (req,res,next) => {
     })
 })
 
+//Tüm userları alma işlemi
+const getAllUsers = asyncErrorWrapper(async (req,res,next) => {
+    const user = await User.find().select("-email -_id") // bu şekilde istediğimiz özellikleri almaz istediklerimizi alabiliriz almak istediklerime + istemdiklerimize - koyarız
 
-const UserController = {getSingleUser};
+    res.status(200).json({
+        success:true,
+        data:user
+    })
+})
+
+
+const UserController = {getSingleUser, getAllUsers};
 export default UserController; 

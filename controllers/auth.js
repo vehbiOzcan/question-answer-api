@@ -70,7 +70,7 @@ const login = asyncErrorWrapper(async (req, res, next) => {
         return next(new CustomError("Please check your input", 400))
     }
 
-    const user = await User.findOne({ email }).select("+password"); //db den mail e göre kullanıcıyı çekiyoruz 
+    const user = await User.findOne({ email }).selected("+password"); //db den mail e göre kullanıcıyı çekiyoruz 
     //console.log(user);
 
     if (!comparePassword(password, user.password)) { //kullanıcının girdiği password ile dbdeki hashlenmiş password aynı mı diye bakıyoruz 
@@ -167,11 +167,12 @@ const forgotPassword = asyncErrorWrapper(async (req,res,next) => {
 })
 
 //Reset Password
-const resetPassword = asyncErrorWrapper(async ()=> {
+const resetPassword = asyncErrorWrapper(async (req,res,next)=> {
     //forgot pasword üzerinden mail ile gönderdiğimiz likin yönlendirdiği routa eklediğimiz query parametresini aldık :D 
     const {resetPasswordToken} = req.query;
     const {password} = req.body //yeni passwordumuzu aldık
 
+    console.log(resetPasswordToken,password)
     //token yoksa hata döndük
     if(!resetPasswordToken){
         next(new CustomError("Please provide a valid token"), 400)
@@ -202,6 +203,45 @@ const resetPassword = asyncErrorWrapper(async ()=> {
 
 }) 
 
+const resetPasswordPage = asyncErrorWrapper(async (req,res,next)=> {
+    //forgot pasword üzerinden mail ile gönderdiğimiz likin yönlendirdiği routa eklediğimiz query parametresini aldık :D 
+    let {resetPasswordToken} = req.query;
+    resetPasswordToken = resetPasswordToken.split(" ")[0]
+    const {password} = req.query //yeni passwordumuzu aldık
+
+    console.log(resetPasswordToken,password)
+    //token yoksa hata döndük
+    if(!resetPasswordToken){
+        next(new CustomError("Please provide a valid token"), 400)
+    }
+
+    //token varsa kulanıcı içerinde aradık 
+    const user = await User.findOne({
+        resetPasswordToken:resetPasswordToken, //resetPasword tokenı eşit olan kişinin bilgilerini
+        resetPasswordExpire: {$gt : Date.now()} //password tokenının expire süresi şimdiki zamandan büyükse alır
+    })
+    //kullanıcının tokeni yoksa yada expire olmuşsa hata fırlattık
+    if(!user){
+        next(new CustomError("Invalid token or session expired", 404))
+    }
+    //Hiç bir sorun yoksa passwordunu güncelledik ve token kısımlarını sıfırladık
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save(); //kayıt ettik 
+    //responsumuzu döndük
+    console.log("success ")
+    res
+    .status(200)
+    .json({
+        success:true,
+        message:"Reset password process successfull"
+    })
+
+}) 
+
+
 //(Denemek için bir amacı yok) Bu hatayı fırlattığımız zaman custom error handlerımız yakalıyor
 const errorTest = (req, res, next) => {
     //some code
@@ -211,6 +251,6 @@ const errorTest = (req, res, next) => {
 
 
 
-const AuthController = { register, errorTest, tokenTest, getUser, login, logout, imageUpload, forgotPassword }
+const AuthController = { register, errorTest, tokenTest, getUser, login, logout, imageUpload, forgotPassword,resetPassword, resetPasswordPage }
 
 export default AuthController;
