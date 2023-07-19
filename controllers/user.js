@@ -36,7 +36,7 @@ const editDetails = asyncErrorWrapper(async (req,res,next) => {
     const id = req.user.id
     //passwordu ayrı olaark aldık ve güncelledik bunu hashleme işlemini daha sağlıklı yapabilmek için yaptık
     const {password,...editInformation} = req.body;
-    const user = await User.findByIdAndUpdate(id,editInformation,{
+    const user = await User.findByIdAndUpdate(id,...editInformation,{
         new:true,
         runValidators:true
     });
