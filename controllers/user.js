@@ -30,6 +30,28 @@ const getAllUsers = asyncErrorWrapper(async (req,res,next) => {
     })
 })
 
+//profil bilgilerini güncelliyoruz
+const editDetails = asyncErrorWrapper(async (req,res,next) => {
 
-const UserController = {getSingleUser, getAllUsers};
+    const id = req.user.id
+    //passwordu ayrı olaark aldık ve güncelledik bunu hashleme işlemini daha sağlıklı yapabilmek için yaptık
+    const {password,...editInformation} = req.body;
+    const user = await User.findByIdAndUpdate(id,editInformation,{
+        new:true,
+        runValidators:true
+    });
+    //şifre varsa güncelliyoruz ve save yapıp passwordun hashlenmesini sağlıyoruz
+    if(password){
+        user.password = password;
+        await user.save();
+    }
+
+    res.status(200).json({
+        success:true,
+        data:user
+    })
+
+})
+
+const UserController = {getSingleUser, getAllUsers, editDetails};
 export default UserController; 
