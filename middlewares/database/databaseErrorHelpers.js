@@ -3,6 +3,7 @@ import CustomError from "../../helpers/error/CustomError.js";
 import asyncErrorWrapper from "../../helpers/error/asyncErrorWrapper.js";
 import User from "../../models/User.js";
 import { objectIdCasting } from "./objectIdCasting.js";
+import Question from "../../models/Question.js";
 
 //sorgu işlemlerinde sürekli id kontrolü yapmamak için merkezi bir id kontrol middleware ı oluşturduk
 const checkExistUser = asyncErrorWrapper(async (req,res,next) => {
@@ -18,4 +19,15 @@ const checkExistUser = asyncErrorWrapper(async (req,res,next) => {
     next(); //sorun yoksa devam ettirdik
  })
 
- export {checkExistUser};
+ const checkQuestionExist = asyncErrorWrapper(async (req,res,next) => {
+    const id = objectIdCasting(req.params.id);
+    const question = await Question.findById(id);
+
+    if(!question){
+        next(new CustomError("There is no such question with that id",400));
+    }
+
+    next();
+ })
+
+ export {checkExistUser,checkQuestionExist};

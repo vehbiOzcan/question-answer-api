@@ -11,6 +11,15 @@ const getAllQuestions = asyncErrorWrapper(async(req, res, next) => {
         })
 })
 
+const getSingleQuestion = asyncErrorWrapper(async (req,res,next) => {
+    const {id} = req.params;
+    const question = await Question.findById(id);
+    res.status(200).json({
+        success:true,
+        data:question
+    })
+})
+
 const askNewQuestion = asyncErrorWrapper(async (req,res,next) => {
     const information = req.body;
     const question = await Question.create({
@@ -25,6 +34,6 @@ const askNewQuestion = asyncErrorWrapper(async (req,res,next) => {
 
 })
 
-const QuestionController = {getAllQuestions,askNewQuestion};
+const QuestionController = {getAllQuestions,askNewQuestion,getSingleQuestion};
 
 export default QuestionController;
