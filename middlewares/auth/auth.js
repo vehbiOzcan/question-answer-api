@@ -3,6 +3,7 @@ import CustomError from '../../helpers/error/CustomError.js'
 import jwt from 'jsonwebtoken'
 import User from "../../models/User.js";
 import asyncErrorWrapper from "../../helpers/error/asyncErrorWrapper.js";
+import Question from "../../models/Question.js";
 
 
 //Geçerli bir token mı onu kontrol eden middleware
@@ -49,6 +50,22 @@ export const getAdminAccess = asyncErrorWrapper(async (req, res, next) => {
 
     next();
 })
+
+
+//Soruyu editleyen kişinin sahibi olduğunu doğrulayhan middleware
+export const getQuestionOwnerAccess = asyncErrorWrapper(async (req,res,next) => {
+    const userId = req.user.id; 
+    const questionId = req.params.id;
+
+    const question = await Question.findById(questionId);
+    //question içindeki user (oluşturan kişinin id bilgisini tutan alan) ile userId aynı ise 
+    if(question.user.toString() != userId.toString()){
+        next(new CustomError("Only question owner can handle this opration access",403))
+    }
+
+    next();
+
+ })
 
 
 

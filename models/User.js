@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto'
+import Question from "./Question.js";
 
 //Mongoose içerisinden Schema objesini aldık
 const { Schema } = mongoose;
@@ -103,7 +104,6 @@ UserSchema.methods.generateResetPasswordToken = function () {
 
 }
 
-
 //Mongoose un Pre and Post hook ları sayesinde belirtilen  db işleminden önce ve sonra yapıla-cak/bilecek işlemleri yaparız.
 UserSchema.pre("save", function (next) {
     //Parola Değişmemişse
@@ -122,6 +122,16 @@ UserSchema.pre("save", function (next) {
     });
     //console.log(this,"Pre Hooks : Save");
 });
+//Kullanıcı silindiğinde tüm sorularını da silme bu kısım opsiyonel olabilir.
+//Post hookunu silme işşemi olduktan sonraya ayarladık
+
+// UserSchema.post("remove", async function(next){
+//     //Question modelimiz ile user: değeri silinen elemanın _id sine eşit olan tüm soruları siliyoruz
+//     await Question.deleteMany({
+//         user: this._id
+//     })
+//     next()
+// })
 
 //Mongoose içerisine modelimizi kayıt ettik ve export ettik
 export default mongoose.model("User", UserSchema);

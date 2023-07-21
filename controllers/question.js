@@ -34,6 +34,33 @@ const askNewQuestion = asyncErrorWrapper(async (req,res,next) => {
 
 })
 
-const QuestionController = {getAllQuestions,askNewQuestion,getSingleQuestion};
+const editQuestion = asyncErrorWrapper(async(req,res,next)=> {
+    const id = req.params.id;
+    const {title,content} = req.body;
+    //title ve content bilgilerini aldık istersek information vs. diye bir değişken oluşturup tümünü de alabilirdik
+    const question = await Question.findById(id);
+
+    question.title = title;
+    question.content = content;
+    //kayıt edip yeni kaydı döndük
+    const questionUpdate = await question.save();
+
+    res.status(200).json({
+        success:true,
+        data:questionUpdate
+    })
+})
+
+const deleteQuestion = asyncErrorWrapper(async(req,res,next) => {
+    const {id} = req.params;
+    await Question.findByIdAndDelete(id);
+    
+    res.status(200).json({
+        success:true,
+        message:"Question delete successful"
+    })
+})
+
+const QuestionController = {getAllQuestions,askNewQuestion,getSingleQuestion,editQuestion,deleteQuestion};
 
 export default QuestionController;
