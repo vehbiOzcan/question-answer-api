@@ -25,7 +25,13 @@ const QuestionSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: "User"
-    }
+    },
+    likes:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'User'
+        },
+    ]
 
 });
 //Sorumuza kayır olmadan önce yani save edilmeden önce slug alanı ekliyoruz update işlemlerinde title güncellenmemişse slug alanı değişmez !

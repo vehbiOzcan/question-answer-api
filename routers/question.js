@@ -7,6 +7,8 @@ const question = express.Router();
 
 question.get("/", QuestionController.getAllQuestions);
 question.get("/:id",checkQuestionExist,QuestionController.getSingleQuestion);
+question.get("/:id/like",[getAccessToRoute,checkQuestionExist],QuestionController.likeQuestion)
+question.get("/:id/undo_like",[getAccessToRoute,checkQuestionExist],QuestionController.undoLike)
 question.post("/ask",getAccessToRoute ,QuestionController.askNewQuestion);
 question.put("/:id/edit",[getAccessToRoute,checkQuestionExist,getQuestionOwnerAccess],QuestionController.editQuestion);
 question.delete("/:id/delete",[getAccessToRoute,checkQuestionExist,getQuestionOwnerAccess],QuestionController.deleteQuestion);
