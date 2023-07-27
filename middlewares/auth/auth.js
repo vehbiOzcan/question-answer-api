@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import User from "../../models/User.js";
 import asyncErrorWrapper from "../../helpers/error/asyncErrorWrapper.js";
 import Question from "../../models/Question.js";
+import Answer from "../../models/Answer.js";
 
 
 //Geçerli bir token mı onu kontrol eden middleware
@@ -31,7 +32,7 @@ export const getAccessToRoute = asyncErrorWrapper(async (req, res, next) => {
             id: decoded.id,
             name: decoded.name
         }
-
+        
         //console.log(decoded);
         next();
     })
@@ -66,6 +67,19 @@ export const getQuestionOwnerAccess = asyncErrorWrapper(async (req,res,next) => 
     next();
 
  })
+
+export const getAnswerOwnerAccess = asyncErrorWrapper(async (req,res,next) => {
+    const user_id = req.user.id;
+    const answer_id = req.params.answer_id;
+
+    const answer = await Answer.findById(answer_id);
+
+    if(answer.user != user_id){
+        return next(new CustomError("Only this answer owner handle operations",403))
+    }
+
+    next();
+})
 
 
 

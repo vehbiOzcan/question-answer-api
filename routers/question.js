@@ -2,6 +2,7 @@ import express  from "express";
 import QuestionController from "../controllers/question.js";
 import { getAccessToRoute, getQuestionOwnerAccess } from "../middlewares/auth/auth.js";
 import { checkExistUser, checkQuestionExist} from "../middlewares/database/databaseErrorHelpers.js";
+import answer from "./answer.js";
 
 const question = express.Router();
 
@@ -13,4 +14,6 @@ question.post("/ask",getAccessToRoute ,QuestionController.askNewQuestion);
 question.put("/:id/edit",[getAccessToRoute,checkQuestionExist,getQuestionOwnerAccess],QuestionController.editQuestion);
 question.delete("/:id/delete",[getAccessToRoute,checkQuestionExist,getQuestionOwnerAccess],QuestionController.deleteQuestion);
 
+//soru-cevap arasında güçlü bir ilişki olduğu için yönlendirilmesini soru üzerinden yaptık
+question.use("/:question_id/answers",checkQuestionExist,answer);
 export default question;
