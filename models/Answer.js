@@ -37,9 +37,9 @@ AnswerSchema.pre("save", async function (next) {
     
     try {
         //pre hookunu kullandığımız için this nesnemiz içnde question alanı var ve bu da bizim sorumuzun id sini tutuyoruz
-        const question = await Question.findById(this.question)
+        const question = await Question.findById(this.question) //question ObjectId tipinde ve ilgili sorunun id sine sahip
         question.answers.push(this._id);
-
+        question.answersCount = question.answers.length //Cevap eklediğimizde answerCount umuzu arttırdık 
         await question.save();
         next();
     } catch (error) {

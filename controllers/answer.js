@@ -81,6 +81,8 @@ const deleteAnswer = asyncErrorWrapper(async (req, res, next) => {
     const question = await Question.findById(question_id);
 
     question.answers.splice(question.answers.indexOf(answer_id), 1);
+    question.answersCount = question.answers.length;
+    
     await question.save();
     return res.status(200).json({
         success: true,
@@ -103,7 +105,6 @@ const likeAnswer = asyncErrorWrapper(async (req, res, next) => {
         success:true,
         count:answer.likes.length,
         data:answer
-
     })
 })
 
