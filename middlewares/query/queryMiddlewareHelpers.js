@@ -2,7 +2,7 @@ export const searchHelper = (searchKey, query, req) => {
     if (req.query.search) {
         const searchObject = {};
         const regex = new RegExp(req.query.search, 'i'); //Regex'i istediğimiz flag ile oluşturuyoruz biz burada i flagini yaniküçük büyük harf duyarsızlaştırdık
-        searchObject['title'] = regex; //oluşturduğumuz objemizin içine title a göre filitre yapacağımız için regexi ekledik
+        searchObject[searchKey] = regex; //oluşturduğumuz objemizin içine title a göre filitre yapacağımız için regexi ekledik
 
         return query = query.where(searchObject);
         // queryC = queryC.where(searchObject);
@@ -36,7 +36,7 @@ export const paginationHelper = async (model, query, req) => {
     const endIndex = page * limit;
 
     const pagination = {};
-    const total = await model.countDocuments();
+    const total = await model.countDocuments(); // burada awaiy ile beklediğimiz için bu fonskiyondan gelen değeri alabilmek içinde await yapmamız gerek
     const totalPage = Math.ceil(total / limit);
     pagination.current_page = page;
     pagination.total_page = totalPage;
