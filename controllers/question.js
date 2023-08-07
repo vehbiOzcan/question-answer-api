@@ -2,7 +2,7 @@ import CustomError from "../helpers/error/CustomError.js";
 import asyncErrorWrapper from "../helpers/error/asyncErrorWrapper.js";
 import Question from "../models/Question.js";
 
-const getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
+const _getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
 
     let populate = true;
     //Sorular ile beraber kullanıcıların bazı bilgilerini almak için puplate i kullandık
@@ -11,55 +11,69 @@ const getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
         select: "name profil_image"
     }
     //SEARCH
-    let queryC = Question.find(); //Bunu yapmamızın nedeni sorgu filterisinden hemen sonra sayıyı almamız 
+    
     let query = Question.find(); //Burada verileri çekmedik sadece query'i Question.find olarak ayarladık 
-    //query parametresi olarak search olarak gönderiyoruz ve souları filtrelemeyi sağlıyoruz 
-    if (req.query.search) {
-        const searchObject = {};
-        const regex = new RegExp(req.query.search, 'i'); //Regex'i istediğimiz flag ile oluşturuyoruz biz burada i flagini yaniküçük büyük harf duyarsızlaştırdık
-        searchObject['title'] = regex; //oluşturduğumuz objemizin içine title a göre filitre yapacağımız için regexi ekledik
+    // let queryC = Question.find(); //Bunu yapmamızın nedeni sorgu filterisinden hemen sonra sayıyı almamız 
+    // //query parametresi olarak search olarak gönderiyoruz ve souları filtrelemeyi sağlıyoruz 
+    // if (req.query.search) {
+    //     const searchObject = {};
+    //     const regex = new RegExp(req.query.search, 'i'); //Regex'i istediğimiz flag ile oluşturuyoruz biz burada i flagini yaniküçük büyük harf duyarsızlaştırdık
+    //     searchObject['title'] = regex; //oluşturduğumuz objemizin içine title a göre filitre yapacağımız için regexi ekledik
 
-        query = query.where(searchObject);
-        queryC = queryC.where(searchObject);
-    }
+    //     query = query.where(searchObject);
+    //     queryC = queryC.where(searchObject);
+    // }
 
     //POPULATE
-    if (populate) {
-        query = query.populate(populateObject);
-    }
+    // if (populate) {
+    //     query = query.populate(populateObject);
+    // }
 
-    //PAGINATION
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    // //PAGINATION
+    // const page = parseInt(req.query.page) || 1;
+    // const limit = parseInt(req.query.limit) || 5;
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    // const startIndex = (page - 1) * limit;
+    // const endIndex = page * limit;
 
-    const pagination = {};
+    // const pagination = {};
 
-    //1 2 3 4 5 6  7 8 9 10  -> 10 tane soru var
-    //page = 2  limit = 5   startIndex = 5  5. indexten başlayacak bir öncesinde 0 dan 4. ye kadar gelmişti
-    //skip(startIndex) kaç tane atlanacağını söyledik aslında nereden başlanacağı gibi düşünülebilir
-    //limit(limit) kaç tane alıncağını söyledik
-    
-    const total = await queryC.countDocuments();
+    // //1 2 3 4 5 6  7 8 9 10  -> 10 tane soru var
+    // //page = 2  limit = 5   startIndex = 5  5. indexten başlayacak bir öncesinde 0 dan 4. ye kadar gelmişti
+    // //skip(startIndex) kaç tane atlanacağını söyledik aslında nereden başlanacağı gibi düşünülebilir
+    // //limit(limit) kaç tane alıncağını söyledik
 
-    query = query.skip(startIndex).limit(limit);
+    // const total = await queryC.countDocuments();
 
-    //Eğer startIndex yani başlnagıç indexi 0 dan büyükse o zaman bir önceki sayfa vardır ve ekleriz 
-    if (startIndex > 0) {
-        pagination.previous = {
-            page: page - 1,
-            limit: limit
-        }
-    }
-    //Eğer endIndex total (tüm soru sayısı) den küçükse bir sonraki sayfa vardır ve ekleriz 
-    if (endIndex < total) {
-        pagination.next = {
-            page: page + 1,
-            limit: limit
-        }
-    }
+    // query = query.skip(startIndex).limit(limit);
+
+    // //Eğer startIndex yani başlnagıç indexi 0 dan büyükse o zaman bir önceki sayfa vardır ve ekleriz 
+    // if (startIndex > 0) {
+    //     pagination.previous = {
+    //         page: page - 1,
+    //         limit: limit
+    //     }
+    // }
+    // //Eğer endIndex total (tüm soru sayısı) den küçükse bir sonraki sayfa vardır ve ekleriz 
+    // if (endIndex < total) {
+    //     pagination.next = {
+    //         page: page + 1,
+    //         limit: limit
+    //     }
+    // }
+
+    //SORTING ----- most-answered most-liked createdAt
+    // const sortKey = req.query.sortBy
+    // //Her durumda oluşturulma tarihi en yeni olacak şekilde sıralar
+    // if (sortKey === "most-answered") {
+    //     query = query.sort("-answersCount -createdAt") //Büyükten küçüğe doğru (azalan) soru sayısına göre sıralar
+    // }
+    // else if (sortKey) {
+    //     query = query.sort("-likesCount -createdAt")
+    // }
+    // else {
+    //     query = query.sort("-createdAt")
+    // }
 
     const questions = await query;
 
@@ -68,11 +82,17 @@ const getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
         .json({
             success: true,
             count: questions.length,
-            currentPage: page, 
+            currentPage: page,
             totalPage: Math.ceil(total / limit),
             pagination: pagination,
             data: questions
         })
+})
+
+const getAllQuestions = asyncErrorWrapper(async (req, res, next) => {
+    return res
+        .status(200)
+        .json(res.queryResult)
 })
 
 const getSingleQuestion = asyncErrorWrapper(async (req, res, next) => {
