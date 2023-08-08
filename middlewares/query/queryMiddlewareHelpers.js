@@ -27,7 +27,7 @@ export const questionSortHelper = (query, req) => {
     return query.sort("-createdAt")
 }
 
-export const paginationHelper = async (model, query, req) => {
+export const paginationHelper = (totalDocuments, query, req) => {
     //PAGINATION
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
@@ -36,7 +36,7 @@ export const paginationHelper = async (model, query, req) => {
     const endIndex = page * limit;
 
     const pagination = {};
-    const total = await model.countDocuments(); // burada awaiy ile beklediğimiz için bu fonskiyondan gelen değeri alabilmek içinde await yapmamız gerek
+    const total = totalDocuments // burada awaiy ile beklediğimiz için bu fonskiyondan gelen değeri alabilmek içinde await yapmamız gerek
     const totalPage = Math.ceil(total / limit);
     pagination.current_page = page;
     pagination.total_page = totalPage;
@@ -65,7 +65,9 @@ export const paginationHelper = async (model, query, req) => {
     }
 
     return {
-        query: query.skip(startIndex).limit(limit),
-        pagination: pagination
+        query: query === undefined ? undefined : query.skip(startIndex).limit(limit),
+        pagination: pagination,
+        startIndex: startIndex,
+        limit: limit
     }
 }

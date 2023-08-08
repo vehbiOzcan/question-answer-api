@@ -7,8 +7,8 @@ export const userQueryMiddleware = function (model) {
         let query = model.find();
 
         query = searchHelper("name", query, req);
-
-        const paginationResult = await paginationHelper(model, query, req);
+        const totalDocuments = await model.countDocuments();
+        const paginationResult = await paginationHelper(totalDocuments, query, req);
         query = paginationResult.query;
         const pagination = paginationResult.pagination;
         const queryResult = await query;

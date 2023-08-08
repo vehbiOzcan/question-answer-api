@@ -22,9 +22,10 @@ export const questionQueryMiddleware = function (model, options) {//Gönderdiği
 
         //Sorting
         query = questionSortHelper(query, req);
-
+       
         //Pagination
-        const paginationResult = await paginationHelper(model, query, req);
+        const totalDocuments = await model.countDocuments();
+        const paginationResult = await paginationHelper(totalDocuments, query, req);
         query = paginationResult.query;
         const pagination = paginationResult.pagination;
 
